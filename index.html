@@ -28,7 +28,6 @@
             padding: 20px;
         }
 
-        /* Container Principal */
         .app-container {
             width: 100%;
             max-width: 1600px;
@@ -41,7 +40,6 @@
             flex-direction: column;
         }
 
-        /* Tela de Login */
         .login-container {
             width: 100%;
             height: 100%;
@@ -63,14 +61,8 @@
         }
 
         @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .login-header {
@@ -181,11 +173,54 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
+            margin-bottom: 12px;
         }
 
         .login-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .google-btn {
+            background: white;
+            color: #333;
+            border: 2px solid #e5e7eb;
+            box-shadow: none;
+        }
+
+        .google-btn:hover {
+            background: #f8f9fa;
+            transform: translateY(-2px);
+        }
+
+        .google-btn i {
+            margin-right: 8px;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            width: 45%;
+            height: 1px;
+            background: #e5e7eb;
+        }
+
+        .divider::before { left: 0; }
+        .divider::after { right: 0; }
+
+        .divider span {
+            background: white;
+            padding: 0 10px;
+            color: #9ca3af;
+            font-size: 12px;
         }
 
         .error-message {
@@ -198,7 +233,6 @@
             text-align: center;
         }
 
-        /* Chat Layout */
         .chat-layout {
             display: none;
             height: 100%;
@@ -209,7 +243,6 @@
             display: flex;
         }
 
-        /* Sidebar */
         .sidebar {
             width: 320px;
             background: #f9fafb;
@@ -297,7 +330,6 @@
             margin-top: 6px;
         }
 
-        /* Botão toggle sidebar */
         .sidebar-toggle-btn {
             position: absolute;
             right: -12px;
@@ -321,7 +353,6 @@
             transform: scale(1.05);
         }
 
-        /* Chat Principal */
         .chat-main {
             flex: 1;
             display: flex;
@@ -394,7 +425,6 @@
             margin-top: 4px;
         }
 
-        /* Área de mensagens */
         .messages-area {
             flex: 1;
             overflow-y: auto;
@@ -405,7 +435,6 @@
             gap: 16px;
         }
 
-        /* Estilo DeepSeek para mensagens */
         .message {
             max-width: 75%;
             padding: 12px 16px;
@@ -417,14 +446,8 @@
         }
 
         @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .message-student {
@@ -477,7 +500,6 @@
             margin-top: 4px;
         }
 
-        /* Arquivos e código */
         .file-preview {
             max-width: 100%;
             margin-top: 10px;
@@ -508,7 +530,6 @@
             font-size: 12px;
         }
 
-        /* Área de input */
         .input-area {
             padding: 16px 24px;
             background: #ffffff;
@@ -661,7 +682,6 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- Tela de Login -->
         <div class="login-container" id="loginContainer">
             <div class="login-box">
                 <div class="login-header">
@@ -690,8 +710,16 @@
                         <label>Senha</label>
                         <input type="password" id="professorPassword" placeholder="••••••">
                     </div>
-                    <button class="login-btn" onclick="loginProfessor()">
-                        <i class="fas fa-sign-in-alt"></i> Entrar
+                    <button class="login-btn" onclick="loginProfessorEmail()">
+                        <i class="fas fa-envelope"></i> Entrar com Email
+                    </button>
+                    
+                    <div class="divider">
+                        <span>ou</span>
+                    </div>
+                    
+                    <button class="login-btn google-btn" onclick="loginProfessorGoogle()">
+                        <i class="fab fa-google"></i> Entrar com Google
                     </button>
                 </div>
 
@@ -707,9 +735,7 @@
             </div>
         </div>
 
-        <!-- Chat Layout -->
         <div class="chat-layout" id="chatLayout">
-            <!-- Sidebar Histórico -->
             <div class="sidebar" id="sidebar">
                 <div class="sidebar-toggle-btn" onclick="toggleSidebar()">
                     <i class="fas fa-chevron-left" id="sidebarToggleIcon"></i>
@@ -726,7 +752,6 @@
                 </div>
             </div>
 
-            <!-- Chat Principal -->
             <div class="chat-main">
                 <div class="chat-header">
                     <div class="user-info">
@@ -778,7 +803,6 @@
 
         <input type="file" id="fileInput" accept="image/*,application/pdf" style="display: none;" onchange="uploadFile()">
         
-        <!-- Drag & Drop Overlay -->
         <div class="drag-overlay" id="dragOverlay">
             <div class="drag-overlay-content">
                 <i class="fas fa-cloud-upload-alt"></i>
@@ -800,34 +824,22 @@
             measurementId: "G-BP6L84JCT6"
         };
 
-        // Inicializar Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         const storage = firebase.storage();
         const auth = firebase.auth();
 
-        // Variáveis globais
         let currentUser = { name: '', role: '', id: '', email: '', uid: '' };
         let shareWithAll = false;
         let allMessages = [];
         let fileToSend = null;
 
-        // Autenticação
-        auth.onAuthStateChanged(async (user) => {
-            if (user) {
-                const idTokenResult = await user.getIdTokenResult();
-                if (idTokenResult.claims && idTokenResult.claims.professor === true) {
-                    currentUser = {
-                        name: user.displayName || user.email.split('@')[0],
-                        role: 'professor',
-                        id: 'prof_' + user.uid,
-                        email: user.email,
-                        uid: user.uid
-                    };
-                    enterChat();
-                }
-            }
-        });
+        // Lista de emails autorizados como professor
+        const PROFESSORES_AUTORIZADOS = [
+            'pfilho@professores.utfpr.edu.br',
+            'paulooliviof@hotmail.com',
+            // Adicione mais emails aqui
+        ];
 
         function selectRole(role) {
             document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
@@ -837,30 +849,21 @@
             document.getElementById(role === 'professor' ? 'professorForm' : 'studentForm').classList.add('active');
         }
 
-       // Variável para guardar o provider do Google
-        let googleProvider = null;
-
-        async function loginProfessor() {
+        // LOGIN COM EMAIL/SENHA
+        async function loginProfessorEmail() {
+            const email = document.getElementById('professorEmail').value.trim();
+            const password = document.getElementById('professorPassword').value;
+            
+            if (!email || !password) {
+                showError('Preencha todos os campos!');
+                return;
+            }
+            
             try {
-                // Inicializar provider do Google se não existir
-                if (!googleProvider) {
-                    googleProvider = new firebase.auth.GoogleAuthProvider();
-                    googleProvider.addScope('email');
-                    googleProvider.addScope('profile');
-                }
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                const user = userCredential.user;
                 
-                // Abrir popup do Google
-                const result = await auth.signInWithPopup(googleProvider);
-                const user = result.user;
-                
-                // Verificar se o email é de professor (você decide quais emails podem)
-                const emailPermitido = [
-                    'professor@escola.com',
-                    'seuemail@gmail.com',  // Coloque seu email aqui
-                    // Adicione outros emails de professores
-                ];
-                
-                if (emailPermitido.includes(user.email)) {
+                if (PROFESSORES_AUTORIZADOS.includes(user.email)) {
                     currentUser = {
                         name: user.displayName || user.email.split('@')[0],
                         role: 'professor',
@@ -871,20 +874,67 @@
                     enterChat();
                 } else {
                     await auth.signOut();
-                    showError('Acesso negado. Apenas professores autorizados.');
+                    showError('Acesso negado. Este email não é autorizado como professor.');
                 }
-                
             } catch (error) {
-                console.error('Erro no login:', error);
-                if (error.code === 'auth/popup-blocked') {
-                    showError('Popup bloqueado! Permita popups para este site.');
-                } else if (error.code === 'auth/popup-closed-by-user') {
-                    showError('Janela fechada antes de completar o login.');
+                console.error('Erro:', error);
+                if (error.code === 'auth/user-not-found') {
+                    showError('Usuário não encontrado. Verifique o email.');
+                } else if (error.code === 'auth/wrong-password') {
+                    showError('Senha incorreta.');
+                } else if (error.code === 'auth/invalid-email') {
+                    showError('Email inválido.');
                 } else {
-                    showError('Erro ao fazer login com Google: ' + error.message);
+                    showError('Erro ao fazer login: ' + error.message);
                 }
             }
         }
+
+        async function loginProfessor() {
+            try {
+                if (!googleProvider) {
+                    googleProvider = new firebase.auth.GoogleAuthProvider();
+                    // Garante que pede sempre o email e o perfil
+                    googleProvider.addScope('email');
+                    googleProvider.addScope('profile');
+                }
+                
+                // Usar o método compat correto para o popup
+                const result = await firebase.auth().signInWithPopup(googleProvider);
+                const user = result.user;
+                
+                // Lista de emails autorizados (Coloque o seu aqui)
+                    const emailPermitido = [
+                        'pfilho@professores.utfpr.edu.br',
+                        'paulooliviof@hotmail.com', 
+                        // Adicione aqui o seu email real do Google para conseguir testar!
+                    ];
+                    
+                    if (emailPermitido.includes(user.email)) {
+                        currentUser = {
+                            name: user.displayName || user.email.split('@')[0],
+                            role: 'professor',
+                            id: 'prof_' + user.uid,
+                            email: user.email,
+                            uid: user.uid
+                        };
+                        enterChat();
+                    } else {
+                        await firebase.auth().signOut();
+                        showError('Acesso negado. Apenas professores autorizados.');
+                    }
+                    
+                } catch (error) {
+                    console.error('Erro no login:', error);
+                    if (error.code === 'auth/popup-blocked') {
+                        showError('Popup bloqueado! Permita popups para este site.');
+                    } else if (error.code === 'auth/popup-closed-by-user') {
+                        showError('Janela fechada antes de terminar o login.');
+                    } else {
+                        showError('Erro ao fazer login com Google: ' + error.message);
+                    }
+                }
+            }
 
         function loginStudent() {
             const name = document.getElementById('studentName').value.trim();
@@ -918,7 +968,6 @@
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('chatLayout').classList.add('active');
             
-            // Atualizar avatar
             const avatar = document.getElementById('userAvatar');
             avatar.innerHTML = `<i class="fas fa-${currentUser.role === 'professor' ? 'chalkboard-user' : 'user-graduate'}"></i>`;
             
@@ -970,7 +1019,6 @@
             await database.ref('messages/' + message.id).set(message);
             messageInput.value = '';
             
-            // Reset share flag após enviar
             if (shareWithAll) {
                 shareWithAll = false;
                 const shareBtn = document.getElementById('shareWithAllBtn');
@@ -1009,7 +1057,6 @@
                     size: file.size
                 };
                 
-                // Enviar automaticamente
                 await sendMessage();
             } catch (error) {
                 console.error('Erro no upload:', error);
@@ -1019,7 +1066,6 @@
             input.value = '';
         }
         
-        // Drag & Drop corrigido
         function dragOver(event) {
             event.preventDefault();
             event.stopPropagation();
@@ -1035,8 +1081,7 @@
             if (files.length > 0) {
                 const file = files[0];
                 if (file.type.startsWith('image/') || file.type === 'application/pdf') {
-                    const fileType = file.type.startsWith('image/') ? 'image' : 'pdf';
-                    uploadFileDirect(file, fileType);
+                    uploadFileDirect(file, file.type.startsWith('image/') ? 'image' : 'pdf');
                 } else {
                     alert('Apenas imagens e PDFs são permitidos!');
                 }
@@ -1068,7 +1113,6 @@
             }
         }
         
-        // Impedir comportamento padrão do navegador para drag
         document.body.addEventListener('dragover', (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -1079,7 +1123,6 @@
             e.stopPropagation();
         });
         
-        // Remover overlay ao sair
         document.addEventListener('dragend', () => {
             document.getElementById('dragOverlay').classList.remove('active');
         });
@@ -1103,12 +1146,10 @@
             if (message.shareWithAll) messageDiv.classList.add('message-shared');
             messageDiv.id = `msg_${message.id}`;
             
-            // Verificar permissão para arquivos: texto sempre visível, arquivo só se compartilhado ou professor
             const canViewFile = (message.shareWithAll || currentUser.role === 'professor' || message.userId === currentUser.id);
             
             let content = `<div class="message-header"><strong>${escapeHtml(message.userName)}</strong> ${message.userRole === 'professor' ? '👨‍🏫' : '👨‍🎓'}</div><div class="message-content">`;
             
-            // Texto sempre é visível para todos
             if (message.text) {
                 if (message.text.includes('```') || message.text.includes('function') || message.text.includes('class') || message.text.includes('def ')) {
                     content += `<pre class="code-block">${escapeHtml(message.text)}</pre>`;
@@ -1117,7 +1158,6 @@
                 }
             }
             
-            // Arquivo: só mostra se tiver permissão
             if (message.file) {
                 if (!canViewFile) {
                     content += `<div style="margin-top: 8px; padding: 8px; background: #fef3c7; border-radius: 8px; font-size: 0.85em;">
@@ -1193,51 +1233,41 @@
         
         async function logout() {
             try {
-                // Atualizar status offline
                 if (currentUser && currentUser.id) {
                     await database.ref('users/' + currentUser.id).update({ online: false });
                 }
                 
-                // Deslogar do Firebase se for professor
                 if (currentUser.role === 'professor' && currentUser.uid) {
                     await auth.signOut();
                 }
                 
-                // Resetar variáveis
                 currentUser = {};
                 allMessages = [];
                 fileToSend = null;
                 shareWithAll = false;
                 
-                // Limpar listeners do Firebase (opcional, mas evita duplicação)
                 database.ref('messages').off();
                 database.ref('users').off();
                 
-                // Voltar para tela de login
                 document.getElementById('loginContainer').style.display = 'flex';
                 document.getElementById('chatLayout').classList.remove('active');
                 
-                // Limpar campos
                 document.getElementById('professorEmail').value = '';
                 document.getElementById('professorPassword').value = '';
                 document.getElementById('studentName').value = '';
                 document.getElementById('messageInput').value = '';
                 
-                // Limpar área de mensagens
                 const messagesArea = document.getElementById('messagesArea');
                 messagesArea.innerHTML = '<div style="text-align: center; color: #9ca3af; padding: 40px;"><i class="fas fa-comments" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>Bem-vindo à sala de aula!</div>';
                 
-                // Resetar histórico
                 const historyDiv = document.getElementById('messagesHistory');
                 historyDiv.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;"><i class="fas fa-spinner fa-spin"></i><br>Carregando...</div>';
                 
-                // Resetar seleção de papel
                 selectRole('student');
                 
                 console.log('Logout realizado com sucesso');
             } catch (error) {
                 console.error('Erro no logout:', error);
-                // Mesmo com erro, tentar voltar para tela de login
                 document.getElementById('loginContainer').style.display = 'flex';
                 document.getElementById('chatLayout').classList.remove('active');
                 selectRole('student');
@@ -1283,10 +1313,12 @@
             return div.innerHTML;
         }
         
-        // Inicializar
         selectRole('student');
-    </script>
 
-    
+        // Configurar drag & drop na área de mensagens
+        const messagesArea = document.getElementById('messagesArea');
+        messagesArea.addEventListener('dragover', dragOver);
+        messagesArea.addEventListener('drop', dropFile);
+    </script>
 </body>
 </html>
