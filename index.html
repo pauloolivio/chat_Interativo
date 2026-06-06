@@ -40,7 +40,6 @@
             flex-direction: column;
         }
 
-        /* Tela de Login */
         .login-container {
             width: 100%;
             height: 100%;
@@ -62,20 +61,6 @@
             animation: fadeInUp 0.6s ease;
             max-height: 90vh;
             overflow-y: auto;
-        }
-
-        .login-box::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .login-box::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-
-        .login-box::-webkit-scrollbar-thumb {
-            background: #667eea;
-            border-radius: 10px;
         }
 
         @keyframes fadeInUp {
@@ -250,7 +235,6 @@
             text-align: center;
         }
 
-        /* Chat Layout */
         .chat-layout {
             display: none;
             height: 100%;
@@ -353,6 +337,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .user-info-header {
@@ -386,6 +372,37 @@
             font-size: 0.75em;
             color: white;
             font-weight: 500;
+        }
+
+        .admin-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .admin-btn {
+            background: #f3f4f6;
+            padding: 8px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            color: #6b7280;
+            font-size: 13px;
+            font-weight: 500;
+            border: none;
+            transition: all 0.3s;
+        }
+
+        .admin-btn:hover {
+            background: #e5e7eb;
+        }
+
+        .admin-btn.save:hover {
+            background: #10b981;
+            color: white;
+        }
+
+        .admin-btn.clear:hover {
+            background: #ef4444;
+            color: white;
         }
 
         .logout-btn {
@@ -543,6 +560,7 @@
         .action-buttons {
             display: flex;
             gap: 8px;
+            flex-wrap: wrap;
         }
 
         button {
@@ -580,6 +598,46 @@
             color: #d97706;
         }
 
+        .btn-share-active {
+            background: #fde68a;
+            color: #d97706;
+        }
+
+        /* Modal de confirmação */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .modal-content h3 {
+            margin-bottom: 15px;
+        }
+
+        .modal-content button {
+            margin: 10px;
+            padding: 10px 20px;
+        }
+
         @media (max-width: 768px) {
             .sidebar {
                 position: fixed;
@@ -589,25 +647,29 @@
                 z-index: 1000;
                 transition: left 0.3s;
             }
-
             .message {
                 max-width: 85%;
             }
-
             .login-box {
                 padding: 28px 20px;
             }
-
             .role-buttons {
                 flex-direction: column;
                 gap: 10px;
+            }
+            .chat-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .admin-buttons {
+                width: 100%;
+                justify-content: flex-start;
             }
         }
     </style>
 </head>
 <body>
     <div class="app-container">
-        <!-- Tela de Login -->
         <div class="login-container" id="loginContainer">
             <div class="login-box">
                 <div class="login-header">
@@ -659,7 +721,6 @@
             </div>
         </div>
 
-        <!-- Chat Layout -->
         <div class="chat-layout" id="chatLayout">
             <div class="sidebar" id="sidebar">
                 <div class="sidebar-header">
@@ -687,8 +748,16 @@
                             </div>
                         </div>
                     </div>
-                    <div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
                         <span class="user-badge" id="userRoleBadge"></span>
+                        <div class="admin-buttons" id="adminButtons" style="display: none;">
+                            <button class="admin-btn save" onclick="exportChatJSON()">
+                                <i class="fas fa-download"></i> Salvar Chat
+                            </button>
+                            <button class="admin-btn clear" onclick="confirmClearChat()">
+                                <i class="fas fa-trash-alt"></i> Limpar
+                            </button>
+                        </div>
                         <button class="logout-btn" onclick="logout()">
                             <i class="fas fa-sign-out-alt"></i> Sair
                         </button>
@@ -726,6 +795,17 @@
         <input type="file" id="fileInput" accept="image/*,application/pdf" style="display: none;" onchange="uploadFile()">
     </div>
 
+    <!-- Modal de confirmação -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content">
+            <h3><i class="fas fa-exclamation-triangle"></i> Confirmar</h3>
+            <p id="modalMessage">Tem certeza que deseja limpar todas as mensagens?</p>
+            <p style="color: red; font-size: 12px; margin-top: 10px;">Esta ação não pode ser desfeita!</p>
+            <button class="admin-btn clear" onclick="clearChat()">Sim, limpar</button>
+            <button class="admin-btn" onclick="closeModal()">Cancelar</button>
+        </div>
+    </div>
+
     <script>
         // ==================== CONFIGURAÇÃO DO FIREBASE ====================
         // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -739,7 +819,6 @@
         measurementId: "G-BP6L84JCT6"
         };
 
-        // Inicializar Firebase
         firebase.initializeApp(firebaseConfig);
 
         // ==================== VARIÁVEIS GLOBAIS ====================
@@ -747,12 +826,13 @@
         let shareWithAll = false;
         let allMessages = [];
         let fileToSend = null;
+        let currentRole = 'student';
 
-        // Lista de emails autorizados como professor
         const PROFESSORES_AUTORIZADOS = ['pfilho@professores.utfpr.edu.br', 'paulooliviof@hotmail.com'];
 
         // ==================== FUNÇÕES DE LOGIN ====================
         function selectRole(role) {
+            currentRole = role;
             document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelector(`.role-btn.${role}`).classList.add('active');
             document.getElementById('professorForm').classList.remove('active');
@@ -843,11 +923,47 @@
             setTimeout(() => errorDiv.remove(), 3000);
         }
 
+        firebase.auth().onAuthStateChanged(async (user) => {
+            if (user && !currentUser.id) {
+                if (PROFESSORES_AUTORIZADOS.includes(user.email)) {
+                    currentUser = {
+                        name: user.displayName || user.email.split('@')[0],
+                        role: 'professor',
+                        id: 'prof_' + user.uid,
+                        email: user.email,
+                        uid: user.uid
+                    };
+                    enterChat();
+                }
+            }
+        });
+
         // ==================== ENTRAR NO CHAT ====================
-        async function enterChat() {
+        function enterChat() {
+            if (!currentUser.id) {
+                if (currentRole === 'student') {
+                    const studentNameInput = document.getElementById('studentName');
+                    const name = studentNameInput.value.trim();
+                    if (!name) {
+                        showError('Por favor, digite seu nome.');
+                        return;
+                    }
+                    currentUser = {
+                        name: name,
+                        role: 'student',
+                        id: 'std_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+                        email: '',
+                        uid: ''
+                    };
+                } else {
+                    showError('Professores devem fazer login com Google ou Email.');
+                    return;
+                }
+            }
+
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('chatLayout').classList.add('active');
-            
+
             const avatar = document.getElementById('userAvatar');
             avatar.innerHTML = `<i class="fas fa-${currentUser.role === 'professor' ? 'chalkboard-user' : 'user-graduate'}"></i>`;
             
@@ -855,28 +971,26 @@
             if (currentUser.role === 'professor') {
                 document.getElementById('userRoleBadge').innerHTML = 'Professor';
                 document.getElementById('userRoleBadge').style.background = '#ec489a';
+                document.getElementById('adminButtons').style.display = 'flex';
             } else {
                 document.getElementById('userRoleBadge').innerHTML = 'Aluno';
                 document.getElementById('userRoleBadge').style.background = '#10b981';
+                document.getElementById('adminButtons').style.display = 'none';
             }
-            
-            try {
-                await firebase.database().ref('users/' + currentUser.id).set({
-                    name: currentUser.name,
-                    role: currentUser.role,
-                    email: currentUser.email,
-                    uid: currentUser.uid,
-                    online: true,
-                    timestamp: Date.now()
-                });
-            } catch (error) {
-                console.error("Erro ao salvar usuário:", error);
-            }
-            
+
+            firebase.database().ref('users/' + currentUser.id).set({
+                name: currentUser.name,
+                role: currentUser.role,
+                email: currentUser.email,
+                uid: currentUser.uid,
+                online: true,
+                timestamp: Date.now()
+            });
+
             window.addEventListener('beforeunload', () => {
                 firebase.database().ref('users/' + currentUser.id).update({ online: false });
             });
-            
+
             loadMessages();
             loadOnlineUsers();
         }
@@ -965,25 +1079,47 @@
                 return;
             }
             
+            // Verificar se é imagem ou PDF
+            if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
+                alert('Apenas imagens (JPG, PNG, GIF) ou PDFs são permitidos!');
+                input.value = '';
+                return;
+            }
+            
             const fileType = file.type.startsWith('image/') ? 'image' : 'pdf';
             
             try {
-                const storageRef = firebase.storage().ref(`files/${Date.now()}_${file.name}`);
-                await storageRef.put(file);
+                // Mostrar loading
+                const sendBtn = document.querySelector('.btn-send');
+                const originalText = sendBtn.innerHTML;
+                sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+                sendBtn.disabled = true;
+                
+                // Criar referencia unica para o arquivo
+                const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+                const storageRef = firebase.storage().ref(`chat_files/${fileName}`);
+                
+                // Upload com progresso
+                const uploadTask = await storageRef.put(file);
                 const downloadURL = await storageRef.getDownloadURL();
                 
                 fileToSend = {
                     name: file.name,
                     url: downloadURL,
-                    type: fileType
+                    type: fileType,
+                    size: file.size
                 };
                 
-                if (fileToSend) {
-                    await sendMessage();
-                }
+                // Enviar mensagem com o arquivo
+                await sendMessage();
+                
+                // Resetar botão
+                sendBtn.innerHTML = originalText;
+                sendBtn.disabled = false;
+                
             } catch (error) {
-                console.error("Erro no upload:", error);
-                alert('Erro ao enviar arquivo: ' + error.message);
+                console.error("Erro detalhado no upload:", error);
+                alert('Erro ao enviar arquivo: ' + (error.message || 'Tente novamente'));
             }
             input.value = '';
         }
@@ -1013,7 +1149,7 @@
             content += `<div class="message-content">`;
             
             if (message.text) {
-                if (message.text.includes('function') || message.text.includes('class')) {
+                if (message.text.includes('function') || message.text.includes('class') || message.text.includes('def ')) {
                     content += `<pre class="code-block">${escapeHtml(message.text)}</pre>`;
                 } else {
                     content += `<p>${escapeHtml(message.text).replace(/\n/g, '<br>')}</p>`;
@@ -1024,9 +1160,9 @@
                 if (!canViewFile) {
                     content += `<div style="padding:8px;background:#fef3c7;border-radius:8px; margin-top:8px;"><i class="fas fa-lock"></i> 📎 ${escapeHtml(message.file.name)} - <strong>Apenas professor pode ver</strong></div>`;
                 } else if (message.file.type === 'image') {
-                    content += `<img src="${message.file.url}" style="max-width:100%; border-radius:8px; margin-top:8px; cursor:pointer;" onclick="window.open('${message.file.url}')">`;
+                    content += `<div class="file-preview"><img src="${message.file.url}" style="max-width:100%; border-radius:8px; margin-top:8px; cursor:pointer;" onclick="window.open('${message.file.url}')"></div>`;
                 } else if (message.file.type === 'pdf') {
-                    content += `<a href="${message.file.url}" target="_blank" style="display:inline-block; margin-top:8px;"><i class="fas fa-file-pdf"></i> ${escapeHtml(message.file.name)}</a>`;
+                    content += `<div class="file-preview"><a href="${message.file.url}" target="_blank" style="display:inline-block; margin-top:8px;"><i class="fas fa-file-pdf"></i> ${escapeHtml(message.file.name)}</a></div>`;
                 }
             }
             
@@ -1042,7 +1178,106 @@
             }, 100);
         }
         
-        // ==================== SAIR DO CHAT (CORRIGIDO) ====================
+        // ==================== FUNÇÕES DO PROFESSOR ====================
+        
+        // Exportar conversa como JSON
+        async function exportChatJSON() {
+            try {
+                const snapshot = await firebase.database().ref('messages').once('value');
+                const messages = snapshot.val();
+                
+                if (!messages) {
+                    alert('Nenhuma mensagem para exportar!');
+                    return;
+                }
+                
+                // Converter para array ordenado
+                const messagesArray = Object.values(messages).sort((a, b) => a.timestamp - b.timestamp);
+                
+                // Criar objeto com metadados
+                const exportData = {
+                    exportDate: new Date().toISOString(),
+                    totalMessages: messagesArray.length,
+                    messages: messagesArray
+                };
+                
+                // Converter para JSON formatado
+                const jsonStr = JSON.stringify(exportData, null, 2);
+                
+                // Criar blob e baixar
+                const blob = new Blob([jsonStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `chat_export_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                alert(`✅ Chat exportado com sucesso!\nTotal: ${messagesArray.length} mensagens`);
+            } catch (error) {
+                console.error('Erro ao exportar:', error);
+                alert('Erro ao exportar chat: ' + error.message);
+            }
+        }
+        
+        // Confirmar limpeza do banco
+        function confirmClearChat() {
+            const modal = document.getElementById('confirmModal');
+            const modalMessage = document.getElementById('modalMessage');
+            modalMessage.innerHTML = 'Tem certeza que deseja LIMPAR TODAS as mensagens do chat?<br><br><strong>Esta ação não pode ser desfeita!</strong>';
+            modal.classList.add('active');
+        }
+        
+        // Limpar todas as mensagens do Firebase
+        async function clearChat() {
+            closeModal();
+            
+            try {
+                // Confirmar novamente
+                if (!confirm('⚠️ ATENÇÃO: Isso irá apagar TODAS as mensagens permanentemente. Continuar?')) {
+                    return;
+                }
+                
+                const snapshot = await firebase.database().ref('messages').once('value');
+                const messages = snapshot.val();
+                
+                if (!messages) {
+                    alert('Nenhuma mensagem para apagar.');
+                    return;
+                }
+                
+                const messageIds = Object.keys(messages);
+                let deletedCount = 0;
+                
+                // Apagar cada mensagem individualmente
+                for (const id of messageIds) {
+                    await firebase.database().ref('messages/' + id).remove();
+                    deletedCount++;
+                }
+                
+                // Limpar array local e recarregar
+                allMessages = [];
+                document.getElementById('messagesArea').innerHTML = '<div style="text-align: center; color: #9ca3af; padding: 40px;"><i class="fas fa-comments" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>Chat limpo! Novo início.</div>';
+                
+                alert(`✅ ${deletedCount} mensagens foram removidas com sucesso!`);
+                
+                // Recarregar listener
+                firebase.database().ref('messages').off();
+                loadMessages();
+                
+            } catch (error) {
+                console.error('Erro ao limpar chat:', error);
+                alert('Erro ao limpar mensagens: ' + error.message);
+            }
+        }
+        
+        function closeModal() {
+            document.getElementById('confirmModal').classList.remove('active');
+        }
+        
+        // ==================== SAIR DO CHAT ====================
         async function logout() {
             try {
                 if (currentUser && currentUser.id) {
@@ -1076,7 +1311,6 @@
                 usersList.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;"><i class="fas fa-spinner fa-spin"></i><br>Carregando...</div>';
                 
                 selectRole('student');
-                console.log('Logout efetuado com sucesso.');
             } catch (error) {
                 console.error('Erro no logout:', error);
                 document.getElementById('loginContainer').style.display = 'flex';
@@ -1102,6 +1336,13 @@
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 sendMessage();
+            }
+        });
+        
+        // Fechar modal ao clicar fora
+        document.getElementById('confirmModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('confirmModal')) {
+                closeModal();
             }
         });
         
