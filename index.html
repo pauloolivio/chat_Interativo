@@ -313,6 +313,7 @@
             gap: 8px;
             border-right: 3px solid #10b981;
             transition: all 0.2s;
+            position: relative;
         }
 
         .user-item:hover {
@@ -346,6 +347,34 @@
             background: #10b981;
             border-radius: 50%;
             animation: pulse 1.5s infinite;
+        }
+
+        .offline-dot {
+            width: 7px;
+            height: 7px;
+            background: #9ca3af;
+            border-radius: 50%;
+        }
+
+        .remove-user-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: #ef4444;
+            font-size: 12px;
+            padding: 4px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            opacity: 0;
+        }
+
+        .user-item:hover .remove-user-btn {
+            opacity: 1;
+        }
+
+        .remove-user-btn:hover {
+            background: #fee;
+            transform: scale(1.1);
         }
 
         @keyframes pulse {
@@ -426,6 +455,11 @@
 
         .admin-btn.clear:hover {
             background: #ef4444;
+            color: white;
+        }
+
+        .admin-btn.clean-users:hover {
+            background: #f59e0b;
             color: white;
         }
 
@@ -604,7 +638,7 @@
             position: relative;
         }
 
-        /* Input Area - Design compacto */
+        /* Input Area */
         .input-area {
             padding: 12px 20px;
             background: #ffffff;
@@ -661,7 +695,7 @@
             border-radius: 10px;
             cursor: pointer;
             font-size: 12px;
-            font-weight: 500;
+            font-weight: 400;
             transition: all 0.3s;
         }
 
@@ -670,9 +704,9 @@
             color: white;
             padding: 10px 20px;
             border-radius: 10px;
-            width: 100%;
+            width: 70%;
             font-size: 13px;
-            font-weight: 600;
+            font-weight: 400;
         }
 
         .btn-send:hover {
@@ -692,7 +726,6 @@
             background: #e5e7eb;
         }
 
-        /* Emoji Picker */
         .emoji-picker {
             position: absolute;
             bottom: 160px;
@@ -767,7 +800,6 @@
             100% { opacity: 0; transform: translateY(-20px); }
         }
 
-        /* Responsividade */
         @media (max-width: 768px) {
             .sidebar {
                 position: fixed;
@@ -809,6 +841,7 @@
             .admin-buttons {
                 width: 100%;
                 justify-content: flex-start;
+                flex-wrap: wrap;
             }
 
             .emoji-picker {
@@ -821,7 +854,6 @@
             }
         }
 
-        /* Ajustes para telas muito pequenas */
         @media (max-width: 480px) {
             .input-area {
                 padding: 10px 16px;
@@ -879,7 +911,6 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- Tela de Login -->
         <div class="login-container" id="loginContainer">
             <div class="login-box">
                 <div class="login-header">
@@ -931,7 +962,6 @@
             </div>
         </div>
 
-        <!-- Chat Layout -->
         <div class="chat-layout" id="chatLayout">
             <div class="chat-main">
                 <div class="chat-header">
@@ -955,8 +985,11 @@
                             <button class="admin-btn save" onclick="exportChatJSON()">
                                 <i class="fas fa-download"></i> Salvar
                             </button>
+                            <button class="admin-btn clean-users" onclick="cleanOfflineUsers()">
+                                <i class="fas fa-broom"></i> Limpar Offline
+                            </button>
                             <button class="admin-btn clear" onclick="confirmClearChat()">
-                                <i class="fas fa-trash-alt"></i> Limpar
+                                <i class="fas fa-trash-alt"></i> Limpar Chat
                             </button>
                         </div>
                         <button class="logout-btn" onclick="logout()">
@@ -991,8 +1024,8 @@
 
             <div class="sidebar" id="sidebar">
                 <div class="sidebar-header">
-                    <h3><i class="fas fa-users"></i> Online Agora</h3>
-                    <p>Pessoas na sala</p>
+                    <h3><i class="fas fa-users"></i> Usuários</h3>
+                    <p>Na sala agora</p>
                 </div>
                 <div class="users-list" id="usersList">
                     <div style="text-align: center; color: #999; padding: 20px; font-size: 12px;">
@@ -1003,14 +1036,12 @@
             </div>
         </div>
 
-        <!-- Emoji Picker Simplificado -->
         <div class="emoji-picker" id="emojiPicker">
             <div class="emoji-grid" id="emojiGrid"></div>
         </div>
     </div>
 
     <script>
-        // ==================== CONFIGURAÇÃO DO FIREBASE ====================
         // For Firebase JS SDK v7.20.0 and later, measurementId is optional
         const firebaseConfig = {
         apiKey: "AIzaSyDaDrcJGN2DZ_8VRoOwPI6Junvtbz9bf9M",
@@ -1024,7 +1055,6 @@
 
         firebase.initializeApp(firebaseConfig);
 
-        // ==================== EMOJIS REDUZIDOS ====================
         const emojis = [
             '😀', '😃', '😄', '😁', '😅', '😂', '🤣', '😊', '😇', '🙂',
             '😍', '🥰', '😘', '😗', '😋', '😛', '😜', '🤪', '🤨', '🧐',
@@ -1046,15 +1076,14 @@
             });
         }
 
-        // ==================== VARIÁVEIS GLOBAIS ====================
         let currentUser = { name: '', role: '', id: '', email: '', uid: '' };
         let allMessages = [];
         let currentRole = 'student';
         let heartbeatInterval = null;
+        let usersData = {};
 
-        const PROFESSORES_AUTORIZADOS = ['pfilho@professores.utfpr.edu.br', 'paulooliviof@hotmail.com'];
+        const PROFESSORES_AUTORIZADOS = ['pfilho@professores.utfpr.edu.br','paulooliviof@hotmail.com'];
 
-        // ==================== FUNÇÕES DE LOGIN ====================
         function selectRole(role) {
             currentRole = role;
             document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
@@ -1162,7 +1191,6 @@
             }
         });
 
-        // ==================== ENTRAR NO CHAT ====================
         function enterChat() {
             if (!currentUser.id) {
                 if (currentRole === 'student') {
@@ -1202,7 +1230,6 @@
                 document.getElementById('adminButtons').style.display = 'none';
             }
 
-            // Registrar usuário como online com timestamp
             const userRef = firebase.database().ref('users/' + currentUser.id);
             userRef.set({
                 name: currentUser.name,
@@ -1214,7 +1241,6 @@
                 timestamp: Date.now()
             });
 
-            // Iniciar heartbeat (atualizar lastSeen a cada 15 segundos)
             if (heartbeatInterval) clearInterval(heartbeatInterval);
             heartbeatInterval = setInterval(() => {
                 if (currentUser && currentUser.id) {
@@ -1225,7 +1251,6 @@
                 }
             }, 15000);
 
-            // Configurar desconexão automática
             const connectedRef = firebase.database().ref('.info/connected');
             connectedRef.on('value', (snap) => {
                 if (snap.val() === true) {
@@ -1237,75 +1262,105 @@
                 }
             });
 
-            // Limpar usuários inativos (última atualização há mais de 30 segundos)
-            const usersRef = firebase.database().ref('users');
-            usersRef.on('value', (snapshot) => {
-                const users = snapshot.val();
-                if (users) {
-                    const now = Date.now();
-                    Object.keys(users).forEach(userId => {
-                        const user = users[userId];
-                        if (user && user.online && user.lastSeen) {
-                            const lastSeen = typeof user.lastSeen === 'number' ? user.lastSeen : 0;
-                            if (now - lastSeen > 35000) { // 35 segundos sem atualização
-                                usersRef.child(userId).update({
-                                    online: false
-                                });
-                            }
-                        }
-                    });
-                }
-            });
-
             loadMessages();
             loadOnlineUsers();
             renderEmojis();
         }
 
-        // ==================== LISTA DE USUÁRIOS ONLINE ====================
         function loadOnlineUsers() {
             firebase.database().ref('users').on('value', (snapshot) => {
                 const users = snapshot.val();
                 const usersList = document.getElementById('usersList');
                 usersList.innerHTML = '';
+                usersData = users || {};
                 
                 if (users) {
-                    // Filtrar apenas usuários online (online === true)
-                    const onlineUsers = Object.values(users).filter(u => u && u.online === true);
-                    const totalOnline = onlineUsers.length;
-                    document.getElementById('onlineStatus').innerHTML = `<i class="fas fa-circle"></i> ${totalOnline} online`;
+                    const now = Date.now();
+                    const userArray = Object.entries(users).map(([id, user]) => ({ id, ...user }));
                     
-                    if (onlineUsers.length === 0) {
-                        usersList.innerHTML = '<div style="text-align:center;color:#999;padding:20px;font-size:12px;">Nenhum usuário online</div>';
+                    userArray.sort((a, b) => {
+                        if (a.online === b.online) return 0;
+                        return a.online ? -1 : 1;
+                    });
+                    
+                    const onlineCount = userArray.filter(u => u.online === true).length;
+                    document.getElementById('onlineStatus').innerHTML = `<i class="fas fa-circle"></i> ${onlineCount} online`;
+                    
+                    if (userArray.length === 0) {
+                        usersList.innerHTML = '<div style="text-align:center;color:#999;padding:20px;font-size:12px;">Nenhum usuário na sala</div>';
                     } else {
-                        onlineUsers.forEach(user => {
+                        userArray.forEach(user => {
                             const userDiv = document.createElement('div');
                             userDiv.className = 'user-item';
+                            const isOnline = user.online === true;
+                            
                             userDiv.innerHTML = `
                                 <i class="fas fa-${user.role === 'professor' ? 'chalkboard-user' : 'user-graduate'}"></i>
                                 <div class="user-info">
                                     <div class="user-name">${escapeHtml(user.name)}</div>
                                     <div class="user-role">${user.role === 'professor' ? 'Professor' : 'Aluno'}</div>
                                 </div>
-                                <div class="online-dot"></div>
+                                <div class="${isOnline ? 'online-dot' : 'offline-dot'}"></div>
+                                ${currentUser.role === 'professor' && user.role !== 'professor' ? `<button class="remove-user-btn" onclick="removeUser('${user.id}')" title="Remover usuário"><i class="fas fa-times-circle"></i></button>` : ''}
                             `;
                             usersList.appendChild(userDiv);
                         });
                     }
                 } else {
-                    usersList.innerHTML = '<div style="text-align:center;color:#999;padding:20px;font-size:12px;">Nenhum usuário online</div>';
+                    usersList.innerHTML = '<div style="text-align:center;color:#999;padding:20px;font-size:12px;">Nenhum usuário na sala</div>';
                 }
             });
         }
 
-        // ==================== MENSAGENS ====================
+        function removeUser(userId) {
+            if (confirm('Tem certeza que deseja remover este usuário da lista?')) {
+                firebase.database().ref('users/' + userId).remove()
+                    .then(() => {
+                        showToast('Usuário removido com sucesso!');
+                    })
+                    .catch(err => {
+                        console.error('Erro ao remover usuário:', err);
+                        alert('Erro ao remover usuário.');
+                    });
+            }
+        }
+
+        function cleanOfflineUsers() {
+            if (!usersData) return;
+            
+            const offlineUsers = Object.entries(usersData).filter(([id, user]) => user.online === false);
+            
+            if (offlineUsers.length === 0) {
+                alert('Não há usuários offline para remover.');
+                return;
+            }
+            
+            if (confirm(`Deseja remover ${offlineUsers.length} usuário(s) offline da lista?`)) {
+                let removed = 0;
+                offlineUsers.forEach(([id]) => {
+                    firebase.database().ref('users/' + id).remove()
+                        .then(() => removed++)
+                        .catch(err => console.error('Erro ao remover:', err));
+                });
+                setTimeout(() => {
+                    showToast(`${removed} usuário(s) removido(s) com sucesso!`);
+                }, 1000);
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
         async function sendMessage() {
             const messageInput = document.getElementById('messageInput');
             const text = messageInput.value.trim();
             
-            if (!text) {
-                return;
-            }
+            if (!text) return;
             
             const message = {
                 id: Date.now(),
@@ -1326,7 +1381,6 @@
             }
         }
         
-        // ==================== FUNÇÃO COPIAR TEXTO ====================
         function copyToClipboard(buttonElement) {
             const text = buttonElement.getAttribute('data-text');
             const cleanText = text.replace(/\\n/g, '\n').replace(/\\\\/g, '\\');
@@ -1335,7 +1389,6 @@
                 const originalHTML = buttonElement.innerHTML;
                 buttonElement.innerHTML = '<i class="fas fa-check"></i> Copiado!';
                 buttonElement.classList.add('copy-success');
-                
                 setTimeout(() => {
                     buttonElement.innerHTML = originalHTML;
                     buttonElement.classList.remove('copy-success');
@@ -1348,7 +1401,6 @@
                 textarea.select();
                 document.execCommand('copy');
                 document.body.removeChild(textarea);
-                
                 const originalHTML = buttonElement.innerHTML;
                 buttonElement.innerHTML = '<i class="fas fa-check"></i> Copiado!';
                 buttonElement.classList.add('copy-success');
@@ -1359,7 +1411,6 @@
             });
         }
         
-        // ==================== EMOJIS ====================
         function toggleEmojiPicker() {
             const picker = document.getElementById('emojiPicker');
             picker.classList.toggle('active');
@@ -1389,7 +1440,6 @@
             messageInput.dispatchEvent(new Event('input'));
         }
         
-        // ==================== CARREGAR MENSAGENS ====================
         function loadMessages() {
             firebase.database().ref('messages').orderByChild('timestamp').on('child_added', (snapshot) => {
                 const message = snapshot.val();
@@ -1447,7 +1497,6 @@
             }, 100);
         }
         
-        // ==================== FUNÇÕES DO PROFESSOR ====================
         async function exportChatJSON() {
             try {
                 const snapshot = await firebase.database().ref('messages').once('value');
@@ -1521,16 +1570,13 @@
             }
         }
         
-        // ==================== SAIR DO CHAT ====================
         async function logout() {
             try {
-                // Parar heartbeat
                 if (heartbeatInterval) {
                     clearInterval(heartbeatInterval);
                     heartbeatInterval = null;
                 }
                 
-                // Marcar como offline
                 if (currentUser && currentUser.id) {
                     await firebase.database().ref('users/' + currentUser.id).update({ 
                         online: false,
@@ -1571,7 +1617,6 @@
             }
         }
         
-        // ==================== TOGGLE SIDEBAR ====================
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             sidebar.classList.toggle('open');
@@ -1589,7 +1634,6 @@
             }
         });
         
-        // ==================== EVENTOS ====================
         const messageInput = document.getElementById('messageInput');
         messageInput.addEventListener('input', function() {
             this.style.height = 'auto';
