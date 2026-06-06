@@ -40,6 +40,7 @@
             flex-direction: column;
         }
 
+        /* Tela de Login */
         .login-container {
             width: 100%;
             height: 100%;
@@ -61,6 +62,20 @@
             animation: fadeInUp 0.6s ease;
             max-height: 90vh;
             overflow-y: auto;
+        }
+
+        .login-box::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .login-box::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .login-box::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
         }
 
         @keyframes fadeInUp {
@@ -235,6 +250,7 @@
             text-align: center;
         }
 
+        /* Chat Layout */
         .chat-layout {
             display: none;
             height: 100%;
@@ -245,6 +261,7 @@
             display: flex;
         }
 
+        /* Sidebar */
         .sidebar {
             width: 280px;
             background: #f9fafb;
@@ -322,6 +339,7 @@
             100% { opacity: 1; transform: scale(1); }
         }
 
+        /* Chat Principal */
         .chat-main {
             flex: 1;
             display: flex;
@@ -496,18 +514,6 @@
             color: #9ca3af;
         }
 
-        .file-preview {
-            max-width: 100%;
-            margin-top: 10px;
-        }
-
-        .file-preview img {
-            max-width: 100%;
-            max-height: 200px;
-            border-radius: 12px;
-            cursor: pointer;
-        }
-
         .code-block {
             background: #1e1e1e;
             color: #d4d4d4;
@@ -519,6 +525,7 @@
             font-size: 12px;
         }
 
+        /* Input Area - Largura total */
         .input-area {
             padding: 16px 24px;
             background: #ffffff;
@@ -538,29 +545,32 @@
         .message-input-wrapper {
             background: #f9fafb;
             border-radius: 24px;
-            padding: 8px 16px;
+            padding: 12px 20px;
             border: 1px solid #e5e7eb;
+            transition: all 0.3s;
+            width: 100%;
         }
 
         .message-input-wrapper:focus-within {
             border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
         textarea {
             width: 100%;
             border: none;
             background: transparent;
-            padding: 8px 0;
+            padding: 0;
             font-family: inherit;
-            font-size: 14px;
-            resize: vertical;
+            font-size: 15px;
+            resize: none;
             outline: none;
+            line-height: 1.5;
         }
 
         .action-buttons {
             display: flex;
             gap: 8px;
-            flex-wrap: wrap;
         }
 
         button {
@@ -578,64 +588,58 @@
             color: white;
             padding: 10px 24px;
             border-radius: 24px;
+            white-space: nowrap;
         }
 
         .btn-send:hover {
             transform: scale(1.02);
         }
 
-        .btn-attach {
+        .btn-emoji {
             background: #f3f4f6;
             color: #4b5563;
+            font-size: 18px;
+            padding: 8px 16px;
         }
 
-        .btn-attach:hover {
+        .btn-emoji:hover {
             background: #e5e7eb;
         }
 
-        .btn-share {
-            background: #fef3c7;
-            color: #d97706;
-        }
-
-        .btn-share-active {
-            background: #fde68a;
-            color: #d97706;
-        }
-
-        /* Modal de confirmação */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
+        /* Emoji Picker */
+        .emoji-picker {
+            position: absolute;
+            bottom: 80px;
+            right: 20px;
             background: white;
-            padding: 30px;
-            border-radius: 20px;
-            max-width: 400px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            padding: 12px;
+            display: none;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 8px;
+            z-index: 1000;
+            max-width: 320px;
+            flex-wrap: wrap;
+            border: 1px solid #e5e7eb;
+        }
+
+        .emoji-picker.active {
+            display: grid;
+        }
+
+        .emoji-picker span {
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
             text-align: center;
+            transition: all 0.2s;
+            border-radius: 8px;
         }
 
-        .modal-content h3 {
-            margin-bottom: 15px;
-        }
-
-        .modal-content button {
-            margin: 10px;
-            padding: 10px 20px;
+        .emoji-picker span:hover {
+            background: #f3f4f6;
+            transform: scale(1.1);
         }
 
         @media (max-width: 768px) {
@@ -665,11 +669,18 @@
                 width: 100%;
                 justify-content: flex-start;
             }
+            .emoji-picker {
+                bottom: 100px;
+                right: 10px;
+                max-width: 280px;
+                grid-template-columns: repeat(7, 1fr);
+            }
         }
     </style>
 </head>
 <body>
     <div class="app-container">
+        <!-- Tela de Login -->
         <div class="login-container" id="loginContainer">
             <div class="login-box">
                 <div class="login-header">
@@ -721,6 +732,7 @@
             </div>
         </div>
 
+        <!-- Chat Layout -->
         <div class="chat-layout" id="chatLayout">
             <div class="sidebar" id="sidebar">
                 <div class="sidebar-header">
@@ -774,14 +786,11 @@
                 <div class="input-area">
                     <div class="input-group">
                         <div class="message-input-wrapper">
-                            <textarea id="messageInput" rows="1" placeholder="Digite sua mensagem... (Arraste arquivos aqui também)"></textarea>
+                            <textarea id="messageInput" rows="1" placeholder="Digite sua mensagem... (Enter envia, Shift+Enter pula linha)"></textarea>
                         </div>
                         <div class="action-buttons">
-                            <button class="btn-attach" onclick="document.getElementById('fileInput').click()">
-                                <i class="fas fa-paperclip"></i> Anexar
-                            </button>
-                            <button class="btn-share" id="shareWithAllBtn">
-                                <i class="fas fa-globe"></i> Compartilhar
+                            <button class="btn-emoji" onclick="toggleEmojiPicker()">
+                                <i class="far fa-smile-wink"></i> Emojis
                             </button>
                         </div>
                     </div>
@@ -792,22 +801,91 @@
             </div>
         </div>
 
-        <input type="file" id="fileInput" accept="image/*,application/pdf" style="display: none;" onchange="uploadFile()">
-    </div>
-
-    <!-- Modal de confirmação -->
-    <div class="modal" id="confirmModal">
-        <div class="modal-content">
-            <h3><i class="fas fa-exclamation-triangle"></i> Confirmar</h3>
-            <p id="modalMessage">Tem certeza que deseja limpar todas as mensagens?</p>
-            <p style="color: red; font-size: 12px; margin-top: 10px;">Esta ação não pode ser desfeita!</p>
-            <button class="admin-btn clear" onclick="clearChat()">Sim, limpar</button>
-            <button class="admin-btn" onclick="closeModal()">Cancelar</button>
+        <!-- Emoji Picker -->
+        <div class="emoji-picker" id="emojiPicker">
+            <span onclick="addEmoji('😀')">😀</span>
+            <span onclick="addEmoji('😃')">😃</span>
+            <span onclick="addEmoji('😄')">😄</span>
+            <span onclick="addEmoji('😁')">😁</span>
+            <span onclick="addEmoji('😅')">😅</span>
+            <span onclick="addEmoji('😂')">😂</span>
+            <span onclick="addEmoji('🤣')">🤣</span>
+            <span onclick="addEmoji('😊')">😊</span>
+            <span onclick="addEmoji('😇')">😇</span>
+            <span onclick="addEmoji('🙂')">🙂</span>
+            <span onclick="addEmoji('🙃')">🙃</span>
+            <span onclick="addEmoji('😉')">😉</span>
+            <span onclick="addEmoji('😌')">😌</span>
+            <span onclick="addEmoji('😍')">😍</span>
+            <span onclick="addEmoji('🥰')">🥰</span>
+            <span onclick="addEmoji('😘')">😘</span>
+            <span onclick="addEmoji('😗')">😗</span>
+            <span onclick="addEmoji('😙')">😙</span>
+            <span onclick="addEmoji('😚')">😚</span>
+            <span onclick="addEmoji('😋')">😋</span>
+            <span onclick="addEmoji('😛')">😛</span>
+            <span onclick="addEmoji('😝')">😝</span>
+            <span onclick="addEmoji('😜')">😜</span>
+            <span onclick="addEmoji('🤪')">🤪</span>
+            <span onclick="addEmoji('🤨')">🤨</span>
+            <span onclick="addEmoji('🧐')">🧐</span>
+            <span onclick="addEmoji('🤓')">🤓</span>
+            <span onclick="addEmoji('😎')">😎</span>
+            <span onclick="addEmoji('🤩')">🤩</span>
+            <span onclick="addEmoji('🥳')">🥳</span>
+            <span onclick="addEmoji('😏')">😏</span>
+            <span onclick="addEmoji('😒')">😒</span>
+            <span onclick="addEmoji('😞')">😞</span>
+            <span onclick="addEmoji('😔')">😔</span>
+            <span onclick="addEmoji('😟')">😟</span>
+            <span onclick="addEmoji('😕')">😕</span>
+            <span onclick="addEmoji('🙁')">🙁</span>
+            <span onclick="addEmoji('😣')">😣</span>
+            <span onclick="addEmoji('😖')">😖</span>
+            <span onclick="addEmoji('😫')">😫</span>
+            <span onclick="addEmoji('😩')">😩</span>
+            <span onclick="addEmoji('🥺')">🥺</span>
+            <span onclick="addEmoji('😢')">😢</span>
+            <span onclick="addEmoji('😭')">😭</span>
+            <span onclick="addEmoji('😤')">😤</span>
+            <span onclick="addEmoji('😠')">😠</span>
+            <span onclick="addEmoji('😡')">😡</span>
+            <span onclick="addEmoji('🤬')">🤬</span>
+            <span onclick="addEmoji('🤯')">🤯</span>
+            <span onclick="addEmoji('😳')">😳</span>
+            <span onclick="addEmoji('🥵')">🥵</span>
+            <span onclick="addEmoji('🥶')">🥶</span>
+            <span onclick="addEmoji('😱')">😱</span>
+            <span onclick="addEmoji('😨')">😨</span>
+            <span onclick="addEmoji('😰')">😰</span>
+            <span onclick="addEmoji('😥')">😥</span>
+            <span onclick="addEmoji('🤔')">🤔</span>
+            <span onclick="addEmoji('🤫')">🤫</span>
+            <span onclick="addEmoji('🤭')">🤭</span>
+            <span onclick="addEmoji('🥱')">🥱</span>
+            <span onclick="addEmoji('😴')">😴</span>
+            <span onclick="addEmoji('💤')">💤</span>
+            <span onclick="addEmoji('👍')">👍</span>
+            <span onclick="addEmoji('👎')">👎</span>
+            <span onclick="addEmoji('❤️')">❤️</span>
+            <span onclick="addEmoji('🧡')">🧡</span>
+            <span onclick="addEmoji('💛')">💛</span>
+            <span onclick="addEmoji('💚')">💚</span>
+            <span onclick="addEmoji('💙')">💙</span>
+            <span onclick="addEmoji('💜')">💜</span>
+            <span onclick="addEmoji('🖤')">🖤</span>
+            <span onclick="addEmoji('🤍')">🤍</span>
+            <span onclick="addEmoji('💯')">💯</span>
+            <span onclick="addEmoji('🔥')">🔥</span>
+            <span onclick="addEmoji('✨')">✨</span>
+            <span onclick="addEmoji('⭐')">⭐</span>
+            <span onclick="addEmoji('🌟')">🌟</span>
         </div>
     </div>
 
     <script>
         // ==================== CONFIGURAÇÃO DO FIREBASE ====================
+        // ATENÇÃO: Substitua pelos dados do SEU projeto Firebase!
         // For Firebase JS SDK v7.20.0 and later, measurementId is optional
         const firebaseConfig = {
         apiKey: "AIzaSyDaDrcJGN2DZ_8VRoOwPI6Junvtbz9bf9M",
@@ -819,16 +897,16 @@
         measurementId: "G-BP6L84JCT6"
         };
 
+        // Inicializar Firebase
         firebase.initializeApp(firebaseConfig);
 
         // ==================== VARIÁVEIS GLOBAIS ====================
         let currentUser = { name: '', role: '', id: '', email: '', uid: '' };
-        let shareWithAll = false;
         let allMessages = [];
-        let fileToSend = null;
         let currentRole = 'student';
 
-        const PROFESSORES_AUTORIZADOS = ['pfilho@professores.utfpr.edu.br', 'paulooliviof@hotmail.com'];
+        // Lista de emails autorizados como professor
+        const PROFESSORES_AUTORIZADOS = ['professor@escola.com', 'admin@escola.com'];
 
         // ==================== FUNÇÕES DE LOGIN ====================
         function selectRole(role) {
@@ -923,6 +1001,7 @@
             setTimeout(() => errorDiv.remove(), 3000);
         }
 
+        // Monitor de autenticação
         firebase.auth().onAuthStateChanged(async (user) => {
             if (user && !currentUser.id) {
                 if (PROFESSORES_AUTORIZADOS.includes(user.email)) {
@@ -964,6 +1043,7 @@
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('chatLayout').classList.add('active');
 
+            // Atualizar UI
             const avatar = document.getElementById('userAvatar');
             avatar.innerHTML = `<i class="fas fa-${currentUser.role === 'professor' ? 'chalkboard-user' : 'user-graduate'}"></i>`;
             
@@ -978,6 +1058,7 @@
                 document.getElementById('adminButtons').style.display = 'none';
             }
 
+            // Salvar usuário no Firebase
             firebase.database().ref('users/' + currentUser.id).set({
                 name: currentUser.name,
                 role: currentUser.role,
@@ -987,10 +1068,12 @@
                 timestamp: Date.now()
             });
 
+            // Remover quando sair
             window.addEventListener('beforeunload', () => {
                 firebase.database().ref('users/' + currentUser.id).update({ online: false });
             });
 
+            // Carregar dados
             loadMessages();
             loadOnlineUsers();
         }
@@ -1033,8 +1116,7 @@
             const messageInput = document.getElementById('messageInput');
             const text = messageInput.value.trim();
             
-            if (!text && !fileToSend) {
-                alert("Digite uma mensagem ou anexe um arquivo.");
+            if (!text) {
                 return;
             }
             
@@ -1043,87 +1125,54 @@
                 userId: currentUser.id,
                 userName: currentUser.name,
                 userRole: currentUser.role,
-                text: text || '',
-                timestamp: Date.now(),
-                shareWithAll: shareWithAll
+                text: text,
+                timestamp: Date.now()
             };
-            
-            if (fileToSend) {
-                message.file = fileToSend;
-                fileToSend = null;
-            }
             
             try {
                 await firebase.database().ref('messages/' + message.id).set(message);
                 messageInput.value = '';
-                
-                if (shareWithAll) {
-                    shareWithAll = false;
-                    const shareBtn = document.getElementById('shareWithAllBtn');
-                    shareBtn.style.background = '#fef3c7';
-                    shareBtn.innerHTML = '<i class="fas fa-globe"></i> Compartilhar';
-                }
+                // Resetar altura do textarea
+                messageInput.style.height = 'auto';
             } catch (error) {
                 console.error("Erro ao enviar mensagem:", error);
                 alert("Erro ao enviar: " + error.message);
             }
         }
         
-        async function uploadFile() {
-            const input = document.getElementById('fileInput');
-            const file = input.files[0];
-            if (!file) return;
+        // ==================== EMOJIS ====================
+        function toggleEmojiPicker() {
+            const picker = document.getElementById('emojiPicker');
+            picker.classList.toggle('active');
             
-            if (file.size > 10 * 1024 * 1024) {
-                alert('Arquivo muito grande! Máximo 10MB');
-                return;
+            // Fechar ao clicar fora
+            if (picker.classList.contains('active')) {
+                setTimeout(() => {
+                    document.addEventListener('click', function closePicker(e) {
+                        if (!picker.contains(e.target) && !e.target.closest('.btn-emoji')) {
+                            picker.classList.remove('active');
+                            document.removeEventListener('click', closePicker);
+                        }
+                    });
+                }, 0);
             }
-            
-            // Verificar se é imagem ou PDF
-            if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
-                alert('Apenas imagens (JPG, PNG, GIF) ou PDFs são permitidos!');
-                input.value = '';
-                return;
-            }
-            
-            const fileType = file.type.startsWith('image/') ? 'image' : 'pdf';
-            
-            try {
-                // Mostrar loading
-                const sendBtn = document.querySelector('.btn-send');
-                const originalText = sendBtn.innerHTML;
-                sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
-                sendBtn.disabled = true;
-                
-                // Criar referencia unica para o arquivo
-                const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-                const storageRef = firebase.storage().ref(`chat_files/${fileName}`);
-                
-                // Upload com progresso
-                const uploadTask = await storageRef.put(file);
-                const downloadURL = await storageRef.getDownloadURL();
-                
-                fileToSend = {
-                    name: file.name,
-                    url: downloadURL,
-                    type: fileType,
-                    size: file.size
-                };
-                
-                // Enviar mensagem com o arquivo
-                await sendMessage();
-                
-                // Resetar botão
-                sendBtn.innerHTML = originalText;
-                sendBtn.disabled = false;
-                
-            } catch (error) {
-                console.error("Erro detalhado no upload:", error);
-                alert('Erro ao enviar arquivo: ' + (error.message || 'Tente novamente'));
-            }
-            input.value = '';
         }
         
+        function addEmoji(emoji) {
+            const messageInput = document.getElementById('messageInput');
+            const start = messageInput.selectionStart;
+            const end = messageInput.selectionEnd;
+            const text = messageInput.value;
+            const newText = text.substring(0, start) + emoji + text.substring(end);
+            messageInput.value = newText;
+            messageInput.focus();
+            messageInput.selectionStart = messageInput.selectionEnd = start + emoji.length;
+            
+            // Fechar o picker após selecionar
+            document.getElementById('emojiPicker').classList.remove('active');
+        }
+        
+        // ==================== CARREGAR MENSAGENS ====================
         function loadMessages() {
             firebase.database().ref('messages').orderByChild('timestamp').on('child_added', (snapshot) => {
                 const message = snapshot.val();
@@ -1143,26 +1192,19 @@
             messageDiv.className = `message ${message.userRole === 'professor' ? 'message-professor' : 'message-student'}`;
             messageDiv.id = `msg_${message.id}`;
             
-            const canViewFile = (message.shareWithAll || currentUser.role === 'professor' || message.userId === currentUser.id);
-            
             let content = `<div class="message-header"><strong>${escapeHtml(message.userName)}</strong> ${message.userRole === 'professor' ? '👨‍🏫' : '👨‍🎓'}</div>`;
             content += `<div class="message-content">`;
             
             if (message.text) {
-                if (message.text.includes('function') || message.text.includes('class') || message.text.includes('def ')) {
+                // Detectar código
+                if (message.text.includes('function') || message.text.includes('class') || message.text.includes('def ') || message.text.includes('```')) {
                     content += `<pre class="code-block">${escapeHtml(message.text)}</pre>`;
                 } else {
-                    content += `<p>${escapeHtml(message.text).replace(/\n/g, '<br>')}</p>`;
-                }
-            }
-            
-            if (message.file) {
-                if (!canViewFile) {
-                    content += `<div style="padding:8px;background:#fef3c7;border-radius:8px; margin-top:8px;"><i class="fas fa-lock"></i> 📎 ${escapeHtml(message.file.name)} - <strong>Apenas professor pode ver</strong></div>`;
-                } else if (message.file.type === 'image') {
-                    content += `<div class="file-preview"><img src="${message.file.url}" style="max-width:100%; border-radius:8px; margin-top:8px; cursor:pointer;" onclick="window.open('${message.file.url}')"></div>`;
-                } else if (message.file.type === 'pdf') {
-                    content += `<div class="file-preview"><a href="${message.file.url}" target="_blank" style="display:inline-block; margin-top:8px;"><i class="fas fa-file-pdf"></i> ${escapeHtml(message.file.name)}</a></div>`;
+                    // Converter emojis e links
+                    let formattedText = escapeHtml(message.text).replace(/\n/g, '<br>');
+                    // Converter links clicáveis
+                    formattedText = formattedText.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color: inherit; text-decoration: underline;">$1</a>');
+                    content += `<p>${formattedText}</p>`;
                 }
             }
             
@@ -1224,22 +1266,14 @@
         
         // Confirmar limpeza do banco
         function confirmClearChat() {
-            const modal = document.getElementById('confirmModal');
-            const modalMessage = document.getElementById('modalMessage');
-            modalMessage.innerHTML = 'Tem certeza que deseja LIMPAR TODAS as mensagens do chat?<br><br><strong>Esta ação não pode ser desfeita!</strong>';
-            modal.classList.add('active');
+            if (confirm('⚠️ ATENÇÃO: Isso irá apagar TODAS as mensagens permanentemente. Continuar?')) {
+                clearChat();
+            }
         }
         
         // Limpar todas as mensagens do Firebase
         async function clearChat() {
-            closeModal();
-            
             try {
-                // Confirmar novamente
-                if (!confirm('⚠️ ATENÇÃO: Isso irá apagar TODAS as mensagens permanentemente. Continuar?')) {
-                    return;
-                }
-                
                 const snapshot = await firebase.database().ref('messages').once('value');
                 const messages = snapshot.val();
                 
@@ -1251,19 +1285,16 @@
                 const messageIds = Object.keys(messages);
                 let deletedCount = 0;
                 
-                // Apagar cada mensagem individualmente
                 for (const id of messageIds) {
                     await firebase.database().ref('messages/' + id).remove();
                     deletedCount++;
                 }
                 
-                // Limpar array local e recarregar
                 allMessages = [];
                 document.getElementById('messagesArea').innerHTML = '<div style="text-align: center; color: #9ca3af; padding: 40px;"><i class="fas fa-comments" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>Chat limpo! Novo início.</div>';
                 
                 alert(`✅ ${deletedCount} mensagens foram removidas com sucesso!`);
                 
-                // Recarregar listener
                 firebase.database().ref('messages').off();
                 loadMessages();
                 
@@ -1271,10 +1302,6 @@
                 console.error('Erro ao limpar chat:', error);
                 alert('Erro ao limpar mensagens: ' + error.message);
             }
-        }
-        
-        function closeModal() {
-            document.getElementById('confirmModal').classList.remove('active');
         }
         
         // ==================== SAIR DO CHAT ====================
@@ -1290,8 +1317,6 @@
                 
                 currentUser = { name: '', role: '', id: '', email: '', uid: '' };
                 allMessages = [];
-                fileToSend = null;
-                shareWithAll = false;
                 
                 firebase.database().ref('messages').off();
                 firebase.database().ref('users').off();
@@ -1320,29 +1345,19 @@
         }
         
         // ==================== EVENTOS ====================
-        document.getElementById('shareWithAllBtn').addEventListener('click', () => {
-            shareWithAll = !shareWithAll;
-            const btn = document.getElementById('shareWithAllBtn');
-            if (shareWithAll) {
-                btn.style.background = '#fde68a';
-                btn.innerHTML = '<i class="fas fa-check-circle"></i> Compartilhado';
-            } else {
-                btn.style.background = '#fef3c7';
-                btn.innerHTML = '<i class="fas fa-globe"></i> Compartilhar';
-            }
+        
+        // Ajustar altura do textarea automaticamente
+        const messageInput = document.getElementById('messageInput');
+        messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
         });
         
-        document.getElementById('messageInput').addEventListener('keypress', (e) => {
+        // Enviar com Enter, Shift+Enter para nova linha
+        messageInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 sendMessage();
-            }
-        });
-        
-        // Fechar modal ao clicar fora
-        document.getElementById('confirmModal').addEventListener('click', (e) => {
-            if (e.target === document.getElementById('confirmModal')) {
-                closeModal();
             }
         });
         
@@ -1353,6 +1368,18 @@
             return div.innerHTML;
         }
         
+        // Fechar emoji picker ao clicar fora
+        document.addEventListener('click', (e) => {
+            const picker = document.getElementById('emojiPicker');
+            const emojiBtn = document.querySelector('.btn-emoji');
+            if (picker && emojiBtn) {
+                if (!picker.contains(e.target) && !emojiBtn.contains(e.target)) {
+                    picker.classList.remove('active');
+                }
+            }
+        });
+        
+        // Inicializar
         selectRole('student');
     </script>
 </body>
