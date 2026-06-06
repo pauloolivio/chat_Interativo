@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Sala de Aula - Chat Interativo</title>
+    <title>DeepSeek Sala de Aula - Chat Interativo</title>
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -661,7 +661,7 @@
             border-radius: 10px;
             cursor: pointer;
             font-size: 12px;
-            font-weight: 400;
+            font-weight: 500;
             transition: all 0.3s;
         }
 
@@ -670,9 +670,9 @@
             color: white;
             padding: 10px 20px;
             border-radius: 10px;
-            width: 70%;
+            width: 100%;
             font-size: 13px;
-            font-weight: 400;
+            font-weight: 600;
         }
 
         .btn-send:hover {
@@ -884,7 +884,7 @@
             <div class="login-box">
                 <div class="login-header">
                     <i class="fas fa-graduation-cap"></i>
-                    <h2>Sala de Aula Interativa</h2>
+                    <h2>Sala de Aula DeepSeek</h2>
                     <p>Chat interativo para aulas colaborativas</p>
                 </div>
 
@@ -1050,8 +1050,9 @@
         let currentUser = { name: '', role: '', id: '', email: '', uid: '' };
         let allMessages = [];
         let currentRole = 'student';
+        let heartbeatInterval = null;
 
-        const PROFESSORES_AUTORIZADOS = ['pfilho@professores.utfpr.edu.br','paulooliviof@hotmail.com'];
+        const PROFESSORES_AUTORIZADOS = ['pfilho@professores.utfpr.edu.br', 'paulooliviof@hotmail.com'];
 
         // ==================== FUNÇÕES DE LOGIN ====================
         function selectRole(role) {
@@ -1201,17 +1202,59 @@
                 document.getElementById('adminButtons').style.display = 'none';
             }
 
-            firebase.database().ref('users/' + currentUser.id).set({
+            // Registrar usuário como online com timestamp
+            const userRef = firebase.database().ref('users/' + currentUser.id);
+            userRef.set({
                 name: currentUser.name,
                 role: currentUser.role,
                 email: currentUser.email,
                 uid: currentUser.uid,
                 online: true,
+                lastSeen: firebase.database.ServerValue.TIMESTAMP,
                 timestamp: Date.now()
             });
 
-            window.addEventListener('beforeunload', () => {
-                firebase.database().ref('users/' + currentUser.id).update({ online: false });
+            // Iniciar heartbeat (atualizar lastSeen a cada 15 segundos)
+            if (heartbeatInterval) clearInterval(heartbeatInterval);
+            heartbeatInterval = setInterval(() => {
+                if (currentUser && currentUser.id) {
+                    firebase.database().ref('users/' + currentUser.id).update({
+                        lastSeen: firebase.database.ServerValue.TIMESTAMP,
+                        online: true
+                    }).catch(err => console.error('Heartbeat error:', err));
+                }
+            }, 15000);
+
+            // Configurar desconexão automática
+            const connectedRef = firebase.database().ref('.info/connected');
+            connectedRef.on('value', (snap) => {
+                if (snap.val() === true) {
+                    const userStatusRef = firebase.database().ref('users/' + currentUser.id);
+                    userStatusRef.onDisconnect().update({
+                        online: false,
+                        lastSeen: firebase.database.ServerValue.TIMESTAMP
+                    });
+                }
+            });
+
+            // Limpar usuários inativos (última atualização há mais de 30 segundos)
+            const usersRef = firebase.database().ref('users');
+            usersRef.on('value', (snapshot) => {
+                const users = snapshot.val();
+                if (users) {
+                    const now = Date.now();
+                    Object.keys(users).forEach(userId => {
+                        const user = users[userId];
+                        if (user && user.online && user.lastSeen) {
+                            const lastSeen = typeof user.lastSeen === 'number' ? user.lastSeen : 0;
+                            if (now - lastSeen > 35000) { // 35 segundos sem atualização
+                                usersRef.child(userId).update({
+                                    online: false
+                                });
+                            }
+                        }
+                    });
+                }
             });
 
             loadMessages();
@@ -1227,26 +1270,29 @@
                 usersList.innerHTML = '';
                 
                 if (users) {
-                    const onlineUsers = Object.values(users).filter(u => u && u.online);
+                    // Filtrar apenas usuários online (online === true)
+                    const onlineUsers = Object.values(users).filter(u => u && u.online === true);
                     const totalOnline = onlineUsers.length;
                     document.getElementById('onlineStatus').innerHTML = `<i class="fas fa-circle"></i> ${totalOnline} online`;
                     
-                    onlineUsers.forEach(user => {
-                        const userDiv = document.createElement('div');
-                        userDiv.className = 'user-item';
-                        userDiv.innerHTML = `
-                            <i class="fas fa-${user.role === 'professor' ? 'chalkboard-user' : 'user-graduate'}"></i>
-                            <div class="user-info">
-                                <div class="user-name">${escapeHtml(user.name)}</div>
-                                <div class="user-role">${user.role === 'professor' ? 'Professor' : 'Aluno'}</div>
-                            </div>
-                            <div class="online-dot"></div>
-                        `;
-                        usersList.appendChild(userDiv);
-                    });
-                }
-                
-                if (usersList.children.length === 0) {
+                    if (onlineUsers.length === 0) {
+                        usersList.innerHTML = '<div style="text-align:center;color:#999;padding:20px;font-size:12px;">Nenhum usuário online</div>';
+                    } else {
+                        onlineUsers.forEach(user => {
+                            const userDiv = document.createElement('div');
+                            userDiv.className = 'user-item';
+                            userDiv.innerHTML = `
+                                <i class="fas fa-${user.role === 'professor' ? 'chalkboard-user' : 'user-graduate'}"></i>
+                                <div class="user-info">
+                                    <div class="user-name">${escapeHtml(user.name)}</div>
+                                    <div class="user-role">${user.role === 'professor' ? 'Professor' : 'Aluno'}</div>
+                                </div>
+                                <div class="online-dot"></div>
+                            `;
+                            usersList.appendChild(userDiv);
+                        });
+                    }
+                } else {
                     usersList.innerHTML = '<div style="text-align:center;color:#999;padding:20px;font-size:12px;">Nenhum usuário online</div>';
                 }
             });
@@ -1478,8 +1524,18 @@
         // ==================== SAIR DO CHAT ====================
         async function logout() {
             try {
+                // Parar heartbeat
+                if (heartbeatInterval) {
+                    clearInterval(heartbeatInterval);
+                    heartbeatInterval = null;
+                }
+                
+                // Marcar como offline
                 if (currentUser && currentUser.id) {
-                    await firebase.database().ref('users/' + currentUser.id).update({ online: false });
+                    await firebase.database().ref('users/' + currentUser.id).update({ 
+                        online: false,
+                        lastSeen: Date.now()
+                    });
                 }
                 
                 if (currentUser.role === 'professor') {
