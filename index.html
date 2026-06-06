@@ -704,7 +704,7 @@
             color: white;
             padding: 10px 20px;
             border-radius: 10px;
-            width: 70%;
+            width: 100%;
             font-size: 13px;
             font-weight: 400;
         }
@@ -716,7 +716,7 @@
         .btn-emoji {
             background: #f3f4f6;
             color: #4b5563;
-            font-size: 16px;
+            font-size: 13px;
             padding: 8px 16px;
             border-radius: 10px;
             flex: 1;
@@ -1084,6 +1084,46 @@
 
         const PROFESSORES_AUTORIZADOS = ['pfilho@professores.utfpr.edu.br','paulooliviof@hotmail.com'];
 
+        // ==================== PERSISTÊNCIA DE LOGIN ====================
+        function saveUserToLocalStorage(user) {
+            if (user && user.role === 'student') {
+                localStorage.setItem('deepseek_user', JSON.stringify({
+                    name: user.name,
+                    role: user.role,
+                    id: user.id,
+                    timestamp: Date.now()
+                }));
+            }
+        }
+
+        function loadUserFromLocalStorage() {
+            const savedUser = localStorage.getItem('deepseek_user');
+            if (savedUser) {
+                try {
+                    const user = JSON.parse(savedUser);
+                    // Verificar se o login não expirou (24 horas)
+                    if (user && user.role === 'student' && (Date.now() - user.timestamp) < 86400000) {
+                        return {
+                            name: user.name,
+                            role: 'student',
+                            id: user.id,
+                            email: '',
+                            uid: ''
+                        };
+                    } else {
+                        localStorage.removeItem('deepseek_user');
+                    }
+                } catch (e) {
+                    localStorage.removeItem('deepseek_user');
+                }
+            }
+            return null;
+        }
+
+        function clearUserFromLocalStorage() {
+            localStorage.removeItem('deepseek_user');
+        }
+
         function selectRole(role) {
             currentRole = role;
             document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
@@ -1162,6 +1202,9 @@
                 email: '',
                 uid: ''
             };
+            
+            // Salvar no localStorage
+            saveUserToLocalStorage(currentUser);
             enterChat();
         }
 
@@ -1191,6 +1234,17 @@
             }
         });
 
+        // Tentar reconectar aluno ao carregar a página
+        function tryAutoLogin() {
+            const savedUser = loadUserFromLocalStorage();
+            if (savedUser) {
+                currentUser = savedUser;
+                enterChat();
+                return true;
+            }
+            return false;
+        }
+
         function enterChat() {
             if (!currentUser.id) {
                 if (currentRole === 'student') {
@@ -1207,6 +1261,7 @@
                         email: '',
                         uid: ''
                     };
+                    saveUserToLocalStorage(currentUser);
                 } else {
                     showError('Professores devem fazer login com Google ou Email.');
                     return;
@@ -1584,6 +1639,11 @@
                     });
                 }
                 
+                // Limpar localStorage apenas para alunos
+                if (currentUser.role === 'student') {
+                    clearUserFromLocalStorage();
+                }
+                
                 if (currentUser.role === 'professor') {
                     await firebase.auth().signOut();
                 }
@@ -1668,7 +1728,10 @@
             }
         });
         
-        selectRole('student');
+        // Inicialização: tentar auto-login do aluno
+        if (!tryAutoLogin()) {
+            selectRole('student');
+        }
     </script>
 </body>
 </html>
